@@ -1,42 +1,41 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System.Diagnostics;
 
 namespace MGPrimitives
 {
     //Based heavily on https://www.youtube.com/watch?v=ZqwfoMjJAO4
     public sealed class PrimitiveBatch : IDisposable
     {
-        private bool _isDisposed;
+        private bool isDisposed;
 
-        private readonly GraphicsDevice _graphicsDevice;
-        private readonly VertexPositionColor[] _vertices;
-        private readonly int[] _indices;
-        private readonly int _maxVertexCount;
-        private readonly int _maxIndexCount;
-        private int _vertexCount;
-        private int _indexCount;
-        private int _shapeCount;
+        private readonly GraphicsDevice graphicsDevice;
+        private readonly VertexPositionColor[] vertices;
+        private readonly int[] indices;
+        private readonly int maxVertexCount;
+        private readonly int maxIndexCount;
+        private int vertexCount;
+        private int indexCount;
+        private int shapeCount;
 
-        private readonly BasicEffect _effect;
+        private readonly BasicEffect effect;
 
-        private bool _isBatching;
+        private bool isBatching;
 
         public Color DefaultColor;
         public PrimitiveBatch(GraphicsDevice graphicsDevice, int maxVertexCount = 2048)
         {
-            this._isDisposed = false;
+            this.isDisposed = false;
 
-            this._graphicsDevice = graphicsDevice ?? throw new ArgumentNullException(nameof(graphicsDevice));
-            this._maxVertexCount = maxVertexCount;
-            this._maxIndexCount = this._maxVertexCount * 3;
-            this._vertices = new VertexPositionColor[this._maxVertexCount];
-            this._indices = new int[this._maxIndexCount];
-            this._vertexCount = 0;
-            this._indexCount = 0;
-            this._shapeCount = 0;
+            this.graphicsDevice = graphicsDevice ?? throw new ArgumentNullException(nameof(graphicsDevice));
+            this.maxVertexCount = maxVertexCount;
+            this.maxIndexCount = this.maxVertexCount * 3;
+            this.vertices = new VertexPositionColor[this.maxVertexCount];
+            this.indices = new int[this.maxIndexCount];
+            this.vertexCount = 0;
+            this.indexCount = 0;
+            this.shapeCount = 0;
 
-            this._effect = new(this._graphicsDevice)
+            this.effect = new(this.graphicsDevice)
             {
                 TextureEnabled = false,
                 FogEnabled = false,
@@ -49,61 +48,61 @@ namespace MGPrimitives
             };
 
             //Prevents annoyances accociated with triangle cycle order
-            this._graphicsDevice.RasterizerState = new RasterizerState() { CullMode = CullMode.None };
+            this.graphicsDevice.RasterizerState = new RasterizerState() { CullMode = CullMode.None };
 
             this.DefaultColor = Color.Black;
         }
         public void Dispose()
         {
-            if (this._isDisposed) return;
-            this._effect?.Dispose();
-            this._isDisposed = true;
+            if (this.isDisposed) return;
+            this.effect?.Dispose();
+            this.isDisposed = true;
         }
         private void EnsureBatching()
         {
-            if (!this._isBatching) throw new InvalidOperationException("PrimitiveBatch has not yet begun");
+            if (!this.isBatching) throw new InvalidOperationException("PrimitiveBatch has not yet begun");
         }
         public void Begin()
         {
-            if (this._isBatching) throw new InvalidOperationException("PrimitiveBatch has already begun");
+            if (this.isBatching) throw new InvalidOperationException("PrimitiveBatch has already begun");
 
-            this._effect.Projection = Matrix.CreateOrthographicOffCenter(0f, this._graphicsDevice.Viewport.Width, this._graphicsDevice.Viewport.Height, 0f, 0f, 1f);
+            this.effect.Projection = Matrix.CreateOrthographicOffCenter(0f, this.graphicsDevice.Viewport.Width, this.graphicsDevice.Viewport.Height, 0f, 0f, 1f);
 
-            this._isBatching = true;
+            this.isBatching = true;
         }
         public void End()
         {
             Flush();
-            this._isBatching = false;
+            this.isBatching = false;
         }
         private void Flush()
         {
-            if (this._shapeCount == 0) return;
+            if (this.shapeCount == 0) return;
             EnsureBatching();
 
-            foreach (EffectPass pass in this._effect.CurrentTechnique.Passes)
+            foreach (EffectPass pass in this.effect.CurrentTechnique.Passes)
             {
                 pass.Apply();
 
-                this._graphicsDevice.DrawUserIndexedPrimitives<VertexPositionColor>(
+                this.graphicsDevice.DrawUserIndexedPrimitives<VertexPositionColor>(
                     PrimitiveType.TriangleList,
-                    this._vertices,
+                    this.vertices,
                     0,
-                    this._vertexCount,
-                    this._indices,
+                    this.vertexCount,
+                    this.indices,
                     0,
-                    this._indexCount / 3);
+                    this.indexCount / 3);
             }
 
-            this._vertexCount = 0;
-            this._indexCount = 0;
-            this._shapeCount = 0;
+            this.vertexCount = 0;
+            this.indexCount = 0;
+            this.shapeCount = 0;
         }
         private void HandleOverflow(int shapeVertices, int shapeIndices)
         {
-            if (shapeVertices > this._maxVertexCount) throw new ArgumentOutOfRangeException(nameof(shapeVertices), "Shape exceeds maximum vertex count of " + this._maxVertexCount);
-            if (shapeIndices > this._maxIndexCount) throw new ArgumentOutOfRangeException(nameof(shapeIndices), "Shape exceeds maximum index count of " + this._maxIndexCount);
-            if (this._vertexCount + shapeVertices > this._maxVertexCount || this._indexCount + shapeIndices > this._maxIndexCount) Flush();
+            if (shapeVertices > this.maxVertexCount) throw new ArgumentOutOfRangeException(nameof(shapeVertices), "Shape exceeds maximum vertex count of " + this.maxVertexCount);
+            if (shapeIndices > this.maxIndexCount) throw new ArgumentOutOfRangeException(nameof(shapeIndices), "Shape exceeds maximum index count of " + this.maxIndexCount);
+            if (this.vertexCount + shapeVertices > this.maxVertexCount || this.indexCount + shapeIndices > this.maxIndexCount) Flush();
         }
         #region Triangle
         public void Triangle(Point p1, Point p2, Point p3)
@@ -111,30 +110,30 @@ namespace MGPrimitives
             EnsureBatching();
             HandleOverflow(3, 3);
 
-            this._indices[this._indexCount++] = 0 + this._vertexCount;
-            this._indices[this._indexCount++] = 1 + this._vertexCount;
-            this._indices[this._indexCount++] = 2 + this._vertexCount;
+            this.indices[this.indexCount++] = 0 + this.vertexCount;
+            this.indices[this.indexCount++] = 1 + this.vertexCount;
+            this.indices[this.indexCount++] = 2 + this.vertexCount;
 
-            this._vertices[this._vertexCount++] = new VertexPositionColor(new Vector3(p1.ToVector2(), 0f), this.DefaultColor);
-            this._vertices[this._vertexCount++] = new VertexPositionColor(new Vector3(p2.ToVector2(), 0f), this.DefaultColor);
-            this._vertices[this._vertexCount++] = new VertexPositionColor(new Vector3(p3.ToVector2(), 0f), this.DefaultColor);
+            this.vertices[this.vertexCount++] = new VertexPositionColor(new Vector3(p1.ToVector2(), 0f), this.DefaultColor);
+            this.vertices[this.vertexCount++] = new VertexPositionColor(new Vector3(p2.ToVector2(), 0f), this.DefaultColor);
+            this.vertices[this.vertexCount++] = new VertexPositionColor(new Vector3(p3.ToVector2(), 0f), this.DefaultColor);
 
-            this._shapeCount++;
+            this.shapeCount++;
         }
         public void Triangle(Point p1, Point p2, Point p3, Color color)
         {
             EnsureBatching();
             HandleOverflow(3, 3);
 
-            this._indices[this._indexCount++] = 0 + this._vertexCount;
-            this._indices[this._indexCount++] = 1 + this._vertexCount;
-            this._indices[this._indexCount++] = 2 + this._vertexCount;
+            this.indices[this.indexCount++] = 0 + this.vertexCount;
+            this.indices[this.indexCount++] = 1 + this.vertexCount;
+            this.indices[this.indexCount++] = 2 + this.vertexCount;
 
-            this._vertices[this._vertexCount++] = new VertexPositionColor(new Vector3(p1.ToVector2(), 0f), color);
-            this._vertices[this._vertexCount++] = new VertexPositionColor(new Vector3(p2.ToVector2(), 0f), color);
-            this._vertices[this._vertexCount++] = new VertexPositionColor(new Vector3(p3.ToVector2(), 0f), color);
+            this.vertices[this.vertexCount++] = new VertexPositionColor(new Vector3(p1.ToVector2(), 0f), color);
+            this.vertices[this.vertexCount++] = new VertexPositionColor(new Vector3(p2.ToVector2(), 0f), color);
+            this.vertices[this.vertexCount++] = new VertexPositionColor(new Vector3(p3.ToVector2(), 0f), color);
 
-            this._shapeCount++;
+            this.shapeCount++;
         }
         #endregion
         #region Rectangle
@@ -143,50 +142,50 @@ namespace MGPrimitives
             EnsureBatching();
             HandleOverflow(4, 6);
 
-            this._indices[this._indexCount++] = 0 + this._vertexCount;
-            this._indices[this._indexCount++] = 1 + this._vertexCount;
-            this._indices[this._indexCount++] = 2 + this._vertexCount;
+            this.indices[this.indexCount++] = 0 + this.vertexCount;
+            this.indices[this.indexCount++] = 1 + this.vertexCount;
+            this.indices[this.indexCount++] = 2 + this.vertexCount;
 
-            this._indices[this._indexCount++] = 0 + this._vertexCount;
-            this._indices[this._indexCount++] = 2 + this._vertexCount;
-            this._indices[this._indexCount++] = 3 + this._vertexCount;
+            this.indices[this.indexCount++] = 0 + this.vertexCount;
+            this.indices[this.indexCount++] = 2 + this.vertexCount;
+            this.indices[this.indexCount++] = 3 + this.vertexCount;
 
             Vector3 v0 = new(rectangle.Left, rectangle.Top, 0f);
             Vector3 v1 = new(rectangle.Right, rectangle.Top, 0f);
             Vector3 v2 = new(rectangle.Right, rectangle.Bottom, 0f);
             Vector3 v3 = new(rectangle.Left, rectangle.Bottom, 0f);
 
-            this._vertices[this._vertexCount++] = new VertexPositionColor(v0, this.DefaultColor);
-            this._vertices[this._vertexCount++] = new VertexPositionColor(v1, this.DefaultColor);
-            this._vertices[this._vertexCount++] = new VertexPositionColor(v2, this.DefaultColor);
-            this._vertices[this._vertexCount++] = new VertexPositionColor(v3, this.DefaultColor);
+            this.vertices[this.vertexCount++] = new VertexPositionColor(v0, this.DefaultColor);
+            this.vertices[this.vertexCount++] = new VertexPositionColor(v1, this.DefaultColor);
+            this.vertices[this.vertexCount++] = new VertexPositionColor(v2, this.DefaultColor);
+            this.vertices[this.vertexCount++] = new VertexPositionColor(v3, this.DefaultColor);
 
-            this._shapeCount++;
+            this.shapeCount++;
         }
         public void Rectangle(Rectangle rectangle, Color color)
         {
             EnsureBatching();
             HandleOverflow(4, 6);
 
-            this._indices[this._indexCount++] = 0 + this._vertexCount;
-            this._indices[this._indexCount++] = 1 + this._vertexCount;
-            this._indices[this._indexCount++] = 2 + this._vertexCount;
+            this.indices[this.indexCount++] = 0 + this.vertexCount;
+            this.indices[this.indexCount++] = 1 + this.vertexCount;
+            this.indices[this.indexCount++] = 2 + this.vertexCount;
 
-            this._indices[this._indexCount++] = 0 + this._vertexCount;
-            this._indices[this._indexCount++] = 2 + this._vertexCount;
-            this._indices[this._indexCount++] = 3 + this._vertexCount;
+            this.indices[this.indexCount++] = 0 + this.vertexCount;
+            this.indices[this.indexCount++] = 2 + this.vertexCount;
+            this.indices[this.indexCount++] = 3 + this.vertexCount;
 
             Vector3 v0 = new(rectangle.Left, rectangle.Top, 0f);
             Vector3 v1 = new(rectangle.Right, rectangle.Top, 0f);
             Vector3 v2 = new(rectangle.Right, rectangle.Bottom, 0f);
             Vector3 v3 = new(rectangle.Left, rectangle.Bottom, 0f);
 
-            this._vertices[this._vertexCount++] = new VertexPositionColor(v0, color);
-            this._vertices[this._vertexCount++] = new VertexPositionColor(v1, color);
-            this._vertices[this._vertexCount++] = new VertexPositionColor(v2, color);
-            this._vertices[this._vertexCount++] = new VertexPositionColor(v3, color);
+            this.vertices[this.vertexCount++] = new VertexPositionColor(v0, color);
+            this.vertices[this.vertexCount++] = new VertexPositionColor(v1, color);
+            this.vertices[this.vertexCount++] = new VertexPositionColor(v2, color);
+            this.vertices[this.vertexCount++] = new VertexPositionColor(v3, color);
 
-            this._shapeCount++;
+            this.shapeCount++;
         }
         #endregion
         #region Regular Polygon
@@ -198,23 +197,23 @@ namespace MGPrimitives
 
             for (int i = 0; i < sideCount; i++)
             {
-                this._indices[this._indexCount++] = 0 + this._vertexCount;
-                this._indices[this._indexCount++] = 1 + i + this._vertexCount;
-                this._indices[this._indexCount++] = (2 + i > sideCount ? 1 : 2 + i) + this._vertexCount; //this is kinda eww
+                this.indices[this.indexCount++] = 0 + this.vertexCount;
+                this.indices[this.indexCount++] = 1 + i + this.vertexCount;
+                this.indices[this.indexCount++] = (2 + i > sideCount ? 1 : 2 + i) + this.vertexCount; //this is kinda eww
             }
 
             Vector3 center = new(centerLocation.ToVector2(), 0f);
             Vector3 offsetVector = new(0f, centerToVertexDistance, 0f);
             Matrix rotation = Matrix.CreateRotationZ(MathHelper.Tau / sideCount);
 
-            this._vertices[this._vertexCount++] = new VertexPositionColor(center, this.DefaultColor);
+            this.vertices[this.vertexCount++] = new VertexPositionColor(center, this.DefaultColor);
             for (int i = 0; i < sideCount; i++)
             {
                 offsetVector = Vector3.Transform(offsetVector, rotation);
-                this._vertices[this._vertexCount++] = new VertexPositionColor(center + offsetVector, this.DefaultColor);
+                this.vertices[this.vertexCount++] = new VertexPositionColor(center + offsetVector, this.DefaultColor);
             }
 
-            this._shapeCount++;
+            this.shapeCount++;
         }
         public void RegularPolygon(Point centerLocation, float centerToVertexDistance, int sideCount, Color color)
         {
@@ -224,23 +223,23 @@ namespace MGPrimitives
 
             for (int i = 0; i < sideCount; i++)
             {
-                this._indices[this._indexCount++] = 0 + this._vertexCount;
-                this._indices[this._indexCount++] = 1 + i + this._vertexCount;
-                this._indices[this._indexCount++] = (2 + i > sideCount ? 1 : 2 + i) + this._vertexCount; //again
+                this.indices[this.indexCount++] = 0 + this.vertexCount;
+                this.indices[this.indexCount++] = 1 + i + this.vertexCount;
+                this.indices[this.indexCount++] = (2 + i > sideCount ? 1 : 2 + i) + this.vertexCount; //again
             }
 
             Vector3 center = new(centerLocation.ToVector2(), 0f);
             Vector3 offsetVector = new(0f, centerToVertexDistance, 0f);
             Matrix rotation = Matrix.CreateRotationZ(MathHelper.Tau / sideCount);
 
-            this._vertices[this._vertexCount++] = new VertexPositionColor(center, color);
+            this.vertices[this.vertexCount++] = new VertexPositionColor(center, color);
             for (int i = 0; i < sideCount; i++)
             {
                 offsetVector = Vector3.Transform(offsetVector, rotation);
-                this._vertices[this._vertexCount++] = new VertexPositionColor(center + offsetVector, color);
+                this.vertices[this.vertexCount++] = new VertexPositionColor(center + offsetVector, color);
             }
 
-            this._shapeCount++;
+            this.shapeCount++;
         }
         #endregion
         #region Circle
