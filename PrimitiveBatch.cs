@@ -6,7 +6,7 @@ namespace MGPrimitives
     //Based heavily on https://www.youtube.com/watch?v=ZqwfoMjJAO4
     public sealed class PrimitiveBatch : IDisposable
     {
-        #region constants
+        #region Constants
         private const int _defaultMaxVertexCount = 2048;
         #endregion
         #region Private fields

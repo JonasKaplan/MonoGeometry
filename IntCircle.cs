@@ -57,10 +57,10 @@ namespace MGPrimitives
         public readonly bool Equals(IntCircle other) => this == other;
         public readonly override int GetHashCode() => HashCode.Combine(this.X, this.Y, this.Radius);
         public readonly bool Contains(float x, float y) => Math.Sqrt(((this.X - x) * (this.X - x)) + ((this.Y - y) * (this.Y - y))) <= this.Radius;
-        public readonly bool Contains(int x, int y) => Distance(x, y, this.X, this.Y) <= this.Radius;
+        public readonly bool Contains(int x, int y) => IntCircle.Distance(x, y, this.X, this.Y) <= this.Radius;
         public readonly bool Contains(Vector2 point) => this.Contains(point.X, point.Y);
         public readonly bool Contains(Point point) => this.Contains(point.X, point.Y);
-        public readonly bool Intersects(IntCircle circle) => (this.Radius + circle.Radius) >= Distance(circle.X, circle.Y, this.X, this.Y);
+        public readonly bool Intersects(IntCircle circle) => (this.Radius + circle.Radius) >= IntCircle.Distance(circle.X, circle.Y, this.X, this.Y);
         public void Translate(int deltaX, int deltaY)
         {
             this.X += deltaX;
