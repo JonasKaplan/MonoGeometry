@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace MGPrimitives
+namespace MonoGeometry
 {
     //Based heavily on https://www.youtube.com/watch?v=ZqwfoMjJAO4
     public sealed class PrimitiveBatch : IDisposable

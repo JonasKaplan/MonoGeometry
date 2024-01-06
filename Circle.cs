@@ -1,6 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 
-namespace MGPrimitives
+namespace MonoGeometry
 {
     public struct Circle : IEquatable<Circle>
     {
