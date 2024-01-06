@@ -117,6 +117,8 @@ namespace MGPrimitives
             this._isBatching = false;
         }
         #region Triangle
+        public void Triangle(Triangle triangle) => this.Triangle(triangle.P1X, triangle.P1Y, triangle.P2X, triangle.P2Y, triangle.P3X, triangle.P3Y);
+        public void Triangle(Triangle triangle, Color color) => this.Triangle(triangle.P1X, triangle.P1Y, triangle.P2X, triangle.P2Y, triangle.P3X, triangle.P3Y, color);
         public void Triangle(Vector2 p1, Vector2 p2, Vector2 p3) => this.Triangle(p1.X, p1.Y, p2.X, p2.Y, p3.X, p3.Y);
         public void Triangle(Vector2 p1, Vector2 p2, Vector2 p3, Color color) => this.Triangle(p1.X, p1.Y, p2.X, p2.Y, p3.X, p3.Y, color);
         public void Triangle(Point p1, Point p2, Point p3) => this.Triangle(p1.X, p1.Y, p2.X, p2.Y, p3.X, p3.Y);
@@ -207,10 +209,8 @@ namespace MGPrimitives
         }
         #endregion
         #region Circle
-        public void Circle(FloatCircle circle) => this.Circle(circle.X, circle.Y, circle.Radius);
-        public void Circle(FloatCircle circle, Color color) => this.Circle(circle.X, circle.Y, circle.Radius, color);
-        public void Circle(IntCircle circle) => this.Circle(circle.X, circle.Y, circle.Radius);
-        public void Circle(IntCircle circle, Color color) => this.Circle(circle.X, circle.Y, circle.Radius, color);
+        public void Circle(Circle circle) => this.Circle(circle.X, circle.Y, circle.Radius);
+        public void Circle(Circle circle, Color color) => this.Circle(circle.X, circle.Y, circle.Radius, color);
         public void Circle(Vector2 centerLocation, float radius) => this.Circle(centerLocation.X, centerLocation.Y, radius);
         public void Circle(Vector2 centerLocation, float radius, Color color) => this.Circle(centerLocation.X, centerLocation.Y, radius, color);
         public void Circle(Point centerLocation, float radius) => this.Circle(centerLocation.X, centerLocation.Y, radius);
