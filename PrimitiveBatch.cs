@@ -25,9 +25,6 @@ namespace MonoGeometry
 
         private bool _isBatching;
         #endregion
-        #region Public properties
-        public Color DefaultColor { get; set; }
-        #endregion
         #region Constructors
         public PrimitiveBatch(GraphicsDevice graphicsDevice) : this(graphicsDevice, PrimitiveBatch._defaultMaxVertexCount) { }
         public PrimitiveBatch(GraphicsDevice graphicsDevice, int maxVertexCount)
@@ -57,8 +54,6 @@ namespace MonoGeometry
 
             //Prevents annoyances accociated with triangle cycle order
             this._graphicsDevice.RasterizerState = new RasterizerState() { CullMode = CullMode.None };
-
-            this.DefaultColor = Color.Black;
         }
         #endregion
         #region Private methods
@@ -103,11 +98,12 @@ namespace MonoGeometry
             this._effect?.Dispose();
             this._isDisposed = true;
         }
-        public void Begin()
+        public void Begin() => this.Begin(Matrix.Identity);
+        public void Begin(Matrix transformation)
         {
             if (this._isBatching) throw new InvalidOperationException("PrimitiveBatch has already begun");
 
-            this._effect.Projection = Matrix.CreateOrthographicOffCenter(0f, this._graphicsDevice.Viewport.Width, this._graphicsDevice.Viewport.Height, 0f, 0f, 1f);
+            this._effect.Projection = Matrix.CreateOrthographicOffCenter(0f, this._graphicsDevice.Viewport.Width, this._graphicsDevice.Viewport.Height, 0f, 0f, 1f) * transformation;
 
             this._isBatching = true;
         }
@@ -117,13 +113,8 @@ namespace MonoGeometry
             this._isBatching = false;
         }
         #region Triangle
-        public void Triangle(Triangle triangle) => this.Triangle(triangle.P1X, triangle.P1Y, triangle.P2X, triangle.P2Y, triangle.P3X, triangle.P3Y);
         public void Triangle(Triangle triangle, Color color) => this.Triangle(triangle.P1X, triangle.P1Y, triangle.P2X, triangle.P2Y, triangle.P3X, triangle.P3Y, color);
-        public void Triangle(Vector2 p1, Vector2 p2, Vector2 p3) => this.Triangle(p1.X, p1.Y, p2.X, p2.Y, p3.X, p3.Y);
         public void Triangle(Vector2 p1, Vector2 p2, Vector2 p3, Color color) => this.Triangle(p1.X, p1.Y, p2.X, p2.Y, p3.X, p3.Y, color);
-        public void Triangle(Point p1, Point p2, Point p3) => this.Triangle(p1.X, p1.Y, p2.X, p2.Y, p3.X, p3.Y);
-        public void Triangle(Point p1, Point p2, Point p3, Color color) => this.Triangle(p1.X, p1.Y, p2.X, p2.Y, p3.X, p3.Y, color);
-        public void Triangle(float x1, float y1, float x2, float y2, float x3, float y3) => this.Triangle(x1, y1, x2, y2, x3, y3, this.DefaultColor);
         public void Triangle(float x1, float y1, float x2, float y2, float x3, float y3, Color color)
         {
             this.EnsureBatching();
@@ -141,14 +132,8 @@ namespace MonoGeometry
         }
         #endregion
         #region Rectangle
-        public void Rectangle(Rectangle rectangle) => this.Rectangle(rectangle.Left, rectangle.Top, rectangle.Right, rectangle.Bottom);
         public void Rectangle(Rectangle rectangle, Color color) => this.Rectangle(rectangle.Left, rectangle.Top, rectangle.Right, rectangle.Bottom, color);
-        public void Rectangle(Vector2 topLeft, Vector2 bottomRight) => this.Rectangle(topLeft.X, topLeft.Y, bottomRight.X, bottomRight.Y);
         public void Rectangle(Vector2 topLeft, Vector2 bottomRight, Color color) => this.Rectangle(topLeft.X, topLeft.Y, bottomRight.X, bottomRight.Y, color);
-        public void Rectangle(Point topLeft, Point bottomRight) => this.Rectangle(topLeft.X, topLeft.Y, bottomRight.X, bottomRight.Y);
-        public void Rectangle(Point topLeft, Point bottomRight, Color color) => this.Rectangle(topLeft.X, topLeft.Y, bottomRight.X, bottomRight.Y, color);
-        public void Rectangle(float topLeftX, float topLeftY, float bottomRightX, float bottomRightY) =>
-            this.Rectangle(topLeftX, topLeftY, bottomRightX, bottomRightY, this.DefaultColor);
         public void Rectangle(float topLeftX, float topLeftY, float bottomRightX, float bottomRightY, Color color)
         {
             this.EnsureBatching();
@@ -171,16 +156,8 @@ namespace MonoGeometry
         }
         #endregion
         #region Regular Polygon
-        public void RegularPolygon(Vector2 centerLocation, float centerToVertexDistance, int sideCount) =>
-            this.RegularPolygon(centerLocation.X, centerLocation.Y, centerToVertexDistance, sideCount);
         public void RegularPolygon(Vector2 centerLocation, float centerToVertexDistance, int sideCount, Color color) =>
             this.RegularPolygon(centerLocation.X, centerLocation.Y, centerToVertexDistance, sideCount, color);
-        public void RegularPolygon(Point centerLocation, float centerToVertexDistance, int sideCount) =>
-            this.RegularPolygon(centerLocation.X, centerLocation.Y, centerToVertexDistance, sideCount);
-        public void RegularPolygon(Point centerLocation, float centerToVertexDistance, int sideCount, Color color) =>
-            this.RegularPolygon(centerLocation.X, centerLocation.Y, centerToVertexDistance, sideCount, color);
-        public void RegularPolygon(float x, float y, float centerToVertexDistance, int sideCount) =>
-            this.RegularPolygon(x, y, centerToVertexDistance, sideCount, this.DefaultColor);
         public void RegularPolygon(float x, float y, float centerToVertexDistance, int sideCount, Color color)
         {
             this.EnsureBatching();
@@ -209,13 +186,8 @@ namespace MonoGeometry
         }
         #endregion
         #region Circle
-        public void Circle(Circle circle) => this.Circle(circle.X, circle.Y, circle.Radius);
         public void Circle(Circle circle, Color color) => this.Circle(circle.X, circle.Y, circle.Radius, color);
-        public void Circle(Vector2 centerLocation, float radius) => this.Circle(centerLocation.X, centerLocation.Y, radius);
         public void Circle(Vector2 centerLocation, float radius, Color color) => this.Circle(centerLocation.X, centerLocation.Y, radius, color);
-        public void Circle(Point centerLocation, float radius) => this.Circle(centerLocation.X, centerLocation.Y, radius);
-        public void Circle(Point centerLocation, float radius, Color color) => this.Circle(centerLocation.X, centerLocation.Y, radius, color);
-        public void Circle(float x, float y, float radius) => this.Circle(x, y, radius, this.DefaultColor);
         public void Circle(float x, float y, float radius, Color color) => this.RegularPolygon(x, y, radius, (int)(radius / 2) + 4, color);
         #endregion
         #endregion

@@ -40,17 +40,6 @@ namespace MonoGeometry
                 this.P3Y = value.Y;
             }
         }
-        public readonly Rectangle BoundingRectangle
-        {
-            get
-            {
-                int x1 = (int)Math.Min(this.P1X, Math.Min(this.P2X, this.P3X));
-                int y1 = (int)Math.Min(this.P1Y, Math.Min(this.P2Y, this.P3Y));
-                int x2 = (int)Math.Max(this.P1X, Math.Max(this.P2X, this.P3X));
-                int y2 = (int)Math.Max(this.P1Y, Math.Max(this.P2Y, this.P3Y));
-                return new(x1, y1, x2 - x1, y2 - y1);
-            }
-        }
         public readonly double Perimeter
         {
             get
@@ -66,7 +55,6 @@ namespace MonoGeometry
         #endregion
         #region Constructors
         public Triangle() : this(0f, 0f, 0f, 0f, 0f, 0f) { }
-        public Triangle(Point p1, Point p2, Point p3) : this(p1.X, p1.Y, p2.X, p2.Y, p3.X, p3.Y) { }
         public Triangle(Vector2 p1, Vector2 p2, Vector2 p3) : this(p1.X, p1.Y, p2.X, p2.Y, p3.X, p3.Y) { }
         public Triangle(float p1X, float p1Y, float p2X, float p2Y, float p3X, float p3Y)
         {
@@ -87,7 +75,6 @@ namespace MonoGeometry
         public readonly override bool Equals(object? obj) => (obj is Triangle triangle) && (this == triangle);
         public readonly bool Equals(Triangle other) => this == other;
         public readonly override int GetHashCode() => HashCode.Combine(this.P1X, this.P1Y, this.P2X, this.P2Y, this.P3X, this.P3Y);
-        public readonly bool Contains(Point point) => this.Contains(point.X, point.Y);
         public readonly bool Contains(Vector2 point) => this.Contains(point.X, point.Y);
         public readonly bool Contains(float x, float y)
         {
@@ -99,30 +86,21 @@ namespace MonoGeometry
         }
         //TODO: Make sure these matrix transformations work as intended
         public void Rotate(float radians) => this.Rotate(radians, 0f, 0f);
-        public void Rotate(float radians, Point origin) => this.Rotate(radians, origin.X, origin.Y);
         public void Rotate(float radians, Vector2 origin) => this.Rotate(radians, origin.X, origin.Y);
         public void Rotate(float radians, float originX, float originY) => this.Transform(Matrix.CreateRotationZ(radians), originX, originY);
-        public void Translate(Point delta) => this.Translate(delta.X, delta.Y);
         public void Translate(Vector2 delta) => this.Translate(delta.X, delta.Y);
         public void Translate(float deltaX, float deltaY) => this.Transform(Matrix.CreateTranslation(deltaX, deltaY, 0f));
         public void Scale(float factor) => this.Scale(factor, factor);
-        public void Scale(Point factor) => this.Scale(factor.X, factor.Y);
         public void Scale(Vector2 factor) => this.Scale(factor.X, factor.Y);
         public void Scale(float factorX, float factorY)
         {
             Vector2 center = this.Center;
             this.Scale(factorX, factorY, center.X, center.Y);
         }
-        public void Scale(Point factor, Point origin) => this.Scale(factor.X, factor.Y, origin.X, origin.Y);
-        public void Scale(Vector2 factor, Point origin) => this.Scale(factor.X, factor.Y, origin.X, origin.Y);
-        public void Scale(float factorX, float factorY, Point origin) => this.Scale(factorX, factorY, origin.X, origin.Y);
-        public void Scale(Point factor, Vector2 origin) => this.Scale(factor.X, factor.Y, origin.X, origin.Y);
         public void Scale(Vector2 factor, Vector2 origin) => this.Scale(factor.X, factor.Y, origin.X, origin.Y);
         public void Scale(float factorX, float factorY, Vector2 origin) => this.Scale(factorX, factorY, origin.X, origin.Y);
-        public void Scale(Point factor, float originX, float originY) => this.Scale(factor.X, factor.Y, originX, originY);
         public void Scale(Vector2 factor, float originX, float originY) => this.Scale(factor.X, factor.Y, originX, originY);
         public void Scale(float factorX, float factorY, float originX, float originY) => this.Transform(Matrix.CreateScale(factorX, factorY, 1f), originX, originY);
-        public void Transform(Matrix matrix, Point origin) => this.Transform(matrix, origin.X, origin.Y);
         public void Transform(Matrix matrix, Vector2 origin) => this.Transform(matrix, origin.X, origin.Y);
         public void Transform(Matrix matrix, float originX, float originY)
         {
