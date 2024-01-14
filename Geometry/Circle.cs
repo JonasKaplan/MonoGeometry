@@ -1,6 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 
-namespace MonoGeometry
+namespace MonoGeometry.Geometry
 {
     public struct Circle : IEquatable<Circle>
     {
@@ -31,15 +31,15 @@ namespace MonoGeometry
         }
         #endregion
         #region Operators
-        public static bool operator ==(Circle a, Circle b) => (a.Radius == b.Radius) && (a.Location == b.Location);
+        public static bool operator ==(Circle a, Circle b) => a.Radius == b.Radius && a.Location == b.Location;
         public static bool operator !=(Circle a, Circle b) => !(a == b);
         #endregion
         #region Public methods
-        public readonly override bool Equals(object? obj) => (obj is Circle circle) && (this == circle);
+        public readonly override bool Equals(object? obj) => obj is Circle circle && this == circle;
         public readonly bool Equals(Circle other) => this == other;
         public readonly override int GetHashCode() => HashCode.Combine(this.X, this.Y, this.Radius);
         public readonly bool Contains(Vector2 point) => this.Contains(point.X, point.Y);
-        public readonly bool Contains(float x, float y) =>Geometry.DistanceSquared(x, y, this.X, this.Y) <= this.Radius * this.Radius;
+        public readonly bool Contains(float x, float y) => Geometry.DistanceSquared(x, y, this.X, this.Y) <= this.Radius * this.Radius;
         public readonly bool Intersects(Circle circle) =>
             (this.Radius + circle.Radius) * (this.Radius + circle.Radius) >= Geometry.DistanceSquared(circle.X, circle.Y, this.X, this.Y);
         public void Translate(float deltaX, float deltaY)
