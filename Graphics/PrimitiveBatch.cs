@@ -106,7 +106,6 @@ namespace MonoGeometry.Drawing
             this.Flush();
             this._isBatching = false;
         }
-        public void Triangle(Triangle triangle, Color color) => this.Triangle(triangle.P1X, triangle.P1Y, triangle.P2X, triangle.P2Y, triangle.P3X, triangle.P3Y, color);
         public void Triangle(Vector2 p1, Vector2 p2, Vector2 p3, Color color) => this.Triangle(p1.X, p1.Y, p2.X, p2.Y, p3.X, p3.Y, color);
         public void Triangle(float x1, float y1, float x2, float y2, float x3, float y3, Color color)
         {
@@ -173,7 +172,6 @@ namespace MonoGeometry.Drawing
 
             this._shapeCount++;
         }
-        public void Circle(Circle circle, Color color) => this.Circle(circle.X, circle.Y, circle.Radius, color);
         public void Circle(Vector2 centerLocation, float radius, Color color) => this.Circle(centerLocation.X, centerLocation.Y, radius, color);
         public void Circle(float x, float y, float radius, Color color) => this.Ellipse(x, y, radius, 1f, color);
         public void Ellipse(Vector2 location, float radius, float eccentricity, Color color) => this.Ellipse(location.X, location.Y, radius, eccentricity, color);
@@ -206,7 +204,6 @@ namespace MonoGeometry.Drawing
 
             this._shapeCount++;
         }
-        public void LineSegment(LineSegment lineSegment, float width, Color color) => this.LineSegment(lineSegment.P1X, lineSegment.P1Y, lineSegment.P2X, lineSegment.P2Y, width, color);
         public void LineSegment(Vector2 p1, Vector2 p2, float width, Color color) => this.LineSegment(p1.X, p1.Y, p2.X, p2.Y, width, color);
         public void LineSegment(float p1X, float p1Y, float p2X, float p2Y, float width, Color color)
         {
