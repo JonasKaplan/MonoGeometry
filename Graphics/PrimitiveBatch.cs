@@ -231,6 +231,17 @@ namespace MonoGeometry.Drawing
 
             this._shapeCount++;
         }
+        public void Polygon(Polygon polygon, Color color)
+        {
+            this.EnsureBatching();
+            int[] indices = polygon.TriangulatedIndices();
+            this.HandleOverflow(polygon.Points.Length, indices.Length);
+
+            foreach (int index in indices) this._indices[this._indexCount++] = index + this._vertexCount++;
+            foreach (Vector2 point in polygon.Points) this._vertices[this._vertexCount++] = new VertexPositionColor(new Vector3(point, 0f), color);
+            
+            this._shapeCount++;
+        }
         #endregion
     }
 }
