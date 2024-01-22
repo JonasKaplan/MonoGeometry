@@ -1,5 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System.Collections;
+using System.Diagnostics;
+using System.Linq;
 
 namespace MonoGeometry.Geometry
 {
@@ -13,7 +15,7 @@ namespace MonoGeometry.Geometry
             {
                 float sum = 0;
                 for (int i = 0; i < this.Points.Length; i++) sum += (this.Points[(i + 1) % this.Points.Length].X - this.Points[i].X) * (this.Points[(i + 1) % this.Points.Length].Y - this.Points[i].Y);
-                return sum < 0 ? WindingOrder.Counterclockwise : WindingOrder.Clockwise;
+                return sum > 0 ? WindingOrder.Counterclockwise : WindingOrder.Clockwise;
             }
         }
         #endregion
@@ -49,37 +51,38 @@ namespace MonoGeometry.Geometry
         #region Internal methods
         private static void TriangulateRecursive(List<Vector2> points, List<Vector2> triangles)
         {
-            if (points.Count == 3)
+            while (points.Count > 3)
             {
-                triangles.Add(points[0]);
-                triangles.Add(points[1]);
-                triangles.Add(points[2]);
-                return;
-            }
-            for (int i = 0; i < points.Count; i++)
-            {
-                Vector2 edge = points[(i + 2) % points.Count] - points[i];
-                Vector2 edgeNormal = new(edge.Y, -edge.X);
-                float cosAngle = Vector2.Dot(edgeNormal, points[(i + 1) % points.Count] - points[i]);
-                if (cosAngle < 0) continue;
-
-                Triangle ear = new(points[i], points[(i + 1) % points.Count], points[(i + 2) % points.Count]);
-                bool earContainsPoint = false;
-                for (int j = 0; j < points.Count; j++)
+                for (int index1 = 0; index1 < points.Count; index1++)
                 {
-                    if ((j == i) || (j == ((i + 1) % points.Count)) || (j == ((i + 2) % points.Count))) continue;
-                    earContainsPoint |= ear.Contains(points[j]);
+                    int index2 = (index1 + 1) % points.Count;
+                    int index3 = (index1 + 2) % points.Count;
+                    Vector2 edge = points[index3] - points[index1];
+                    Vector2 edgeNormal = new(edge.Y, -edge.X);
+                    float cosAngle = Vector2.Dot(edgeNormal, points[index2] - points[index1]);
+                    if (cosAngle < 0) continue;
+
+                    Triangle ear = new(points[index1], points[index2], points[index3]);
+                    bool earContainsPoint = false;
+                    for (int j = 0; j < points.Count; j++)
+                    {
+                        if ((j == index1) || (j == index2) || (j == index3)) continue;
+                        earContainsPoint |= ear.Contains(points[j]);
+                    }
+                    if (earContainsPoint) continue;
+
+                    triangles.Add(points[index1]);
+                    triangles.Add(points[index2]);
+                    triangles.Add(points[index3]);
+
+                    points.RemoveAt(index2);
+                    break;
                 }
-                if (earContainsPoint) continue;
-
-                triangles.Add(points[i]);
-                triangles.Add(points[(i + 1) % points.Count]);
-                triangles.Add(points[(i + 2) % points.Count]);
-
-                points.RemoveAt((i + 1) % points.Count);
-                TriangulateRecursive(points, triangles);
             }
-            throw new InvalidOperationException("Failed to triangulate polygon");
+            triangles.Add(points[0]);
+            triangles.Add(points[1]);
+            triangles.Add(points[2]);
+            return;
         }
         internal readonly int[] TriangulatedIndices()
         {
