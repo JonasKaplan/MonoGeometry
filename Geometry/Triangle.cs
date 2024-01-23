@@ -36,7 +36,7 @@ namespace MonoGeometry.Geometry
             Triangle t1 = new(point, this.P0, this.P1);
             Triangle t2 = new(point, this.P1, this.P2);
             Triangle t3 = new(point, this.P2, this.P0);
-            return (t1.Area + t2.Area + t3.Area - this.Area) <= 0.0001f;
+            return (t1.Area + t2.Area + t3.Area - this.Area) <= 0.000001f;
         }
         public readonly Polygon ToPolygon() => new(new Vector2[] { this.P0, this.P1, this.P2 });
         public static Triangle Transform(Triangle triangle, Matrix matrix, Vector2 origin)

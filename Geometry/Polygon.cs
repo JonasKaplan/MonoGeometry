@@ -1,7 +1,8 @@
 ﻿using Microsoft.Xna.Framework;
 using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace MonoGeometry.Geometry
 {
@@ -9,15 +10,9 @@ namespace MonoGeometry.Geometry
     {
         #region Public properties
         public readonly Vector2[] Points;
-        public readonly WindingOrder WindingOrder
-        {
-            get
-            {
-                float sum = 0;
-                for (int i = 0; i < this.Points.Length; i++) sum += (this.Points[(i + 1) % this.Points.Length].X - this.Points[i].X) * (this.Points[(i + 1) % this.Points.Length].Y - this.Points[i].Y);
-                return sum > 0 ? WindingOrder.Counterclockwise : WindingOrder.Clockwise;
-            }
-        }
+        #endregion
+        #region Internal properties
+        internal readonly int[] TriangulatedIndices;
         #endregion
         #region Constructors
         public Polygon() : this(new[] { Vector2.Zero, Vector2.Zero, Vector2.Zero }) { }
@@ -26,6 +21,58 @@ namespace MonoGeometry.Geometry
             if (points.Count() < 3) throw new ArgumentOutOfRangeException(nameof(points), "A polygon requires at least 3 points");
             this.Points = new Vector2[points.Count()];
             for (int i = 0; i < this.Points.Length; i++) this.Points[i] = points.ElementAt(i);
+
+            float sum = 0;
+            for (int i = 0; i < this.Points.Length; i++)
+            {
+                Vector2 a = this.Points[i];
+                Vector2 b = this.Points[(i + 1) % this.Points.Length];
+                sum += (b.X - a.X) * (b.Y + a.Y);
+            }
+            if (sum > 0) this.Points = this.Points.Reverse().ToArray();
+
+            int[] indices = new int[3 * (this.Points.Length - 2)];
+            int indexIndex = 0; //Behold: masterful naming
+            List<Vector2> trianglePoints = this.Points.ToList();
+            for (int i = 0; i < this.Points.Length - 3; i++)
+            {
+                for (int index1 = 0; index1 < trianglePoints.Count; index1++)
+                {
+                    int index2 = (index1 + 1) % trianglePoints.Count;
+                    int index3 = (index1 + 2) % trianglePoints.Count;
+                    Vector2 longEdge = trianglePoints[index3] - trianglePoints[index1];
+                    Vector2 longEdgeNormal = new(longEdge.Y, -longEdge.X);
+                    Vector2 shortEdge = trianglePoints[index2] - trianglePoints[index1];
+                    float cosAngle = Vector2.Dot(longEdgeNormal, shortEdge) / (longEdgeNormal.Length() * shortEdge.Length());
+                    if (cosAngle < 0) continue;
+
+                    Triangle ear = new(trianglePoints[index1], trianglePoints[index2], trianglePoints[index3]);
+                    bool earContainsPoint = false;
+                    for (int j = 0; j < trianglePoints.Count; j++)
+                    {
+                        if ((j == index1) || (j == index2) || (j == index3)) continue;
+
+                        if (ear.Contains(trianglePoints[j]))
+                        {
+                            earContainsPoint = true;
+                            break;
+                        }
+                    }
+                    if (earContainsPoint) continue;
+
+                    indices[indexIndex++] = Array.IndexOf(this.Points, trianglePoints[index1]);
+                    indices[indexIndex++] = Array.IndexOf(this.Points, trianglePoints[index2]);
+                    indices[indexIndex++] = Array.IndexOf(this.Points, trianglePoints[index3]);
+                    trianglePoints.RemoveAt(index2);
+                    break;
+                }
+            }
+
+            indices[indexIndex++] = Array.IndexOf(this.Points, trianglePoints[0]);
+            indices[indexIndex++] = Array.IndexOf(this.Points, trianglePoints[1]);
+            indices[indexIndex++] = Array.IndexOf(this.Points, trianglePoints[2]);
+
+            this.TriangulatedIndices = indices;
         }
         #endregion
         #region Operators
@@ -46,52 +93,6 @@ namespace MonoGeometry.Geometry
             string returnString = "{";
             foreach (Vector2 point in Points) returnString += point.ToString() + ", ";
             return returnString.Remove(returnString.Length - 3) + "}";
-        }
-        #endregion
-        #region Internal methods
-        private static void TriangulateRecursive(List<Vector2> points, List<Vector2> triangles)
-        {
-            while (points.Count > 3)
-            {
-                for (int index1 = 0; index1 < points.Count; index1++)
-                {
-                    int index2 = (index1 + 1) % points.Count;
-                    int index3 = (index1 + 2) % points.Count;
-                    Vector2 edge = points[index3] - points[index1];
-                    Vector2 edgeNormal = new(edge.Y, -edge.X);
-                    float cosAngle = Vector2.Dot(edgeNormal, points[index2] - points[index1]);
-                    if (cosAngle < 0) continue;
-
-                    Triangle ear = new(points[index1], points[index2], points[index3]);
-                    bool earContainsPoint = false;
-                    for (int j = 0; j < points.Count; j++)
-                    {
-                        if ((j == index1) || (j == index2) || (j == index3)) continue;
-                        earContainsPoint |= ear.Contains(points[j]);
-                    }
-                    if (earContainsPoint) continue;
-
-                    triangles.Add(points[index1]);
-                    triangles.Add(points[index2]);
-                    triangles.Add(points[index3]);
-
-                    points.RemoveAt(index2);
-                    break;
-                }
-            }
-            triangles.Add(points[0]);
-            triangles.Add(points[1]);
-            triangles.Add(points[2]);
-            return;
-        }
-        internal readonly int[] TriangulatedIndices()
-        {
-            List<Vector2> triangles = new();
-            if (this.WindingOrder == WindingOrder.Counterclockwise) TriangulateRecursive(this.Points.Reverse().ToList(), triangles);
-            else TriangulateRecursive(this.Points.ToList(), triangles);
-            int[] indices = new int[triangles.Count];
-            for (int i = 0; i < indices.Length; i++) indices[i] = Array.IndexOf(this.Points, triangles[i]);
-            return indices;
         }
         public static Polygon Transform(Polygon polygon, Matrix matrix, Vector2 origin)
         {
