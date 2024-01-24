@@ -1,36 +1,61 @@
 ﻿using Microsoft.Xna.Framework;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
 
 namespace MonoGeometry.Geometry
 {
-    public struct Polygon
+    public struct Polygon : ITransformable
     {
+        #region Private fields
+        private Vector2[] _points;
+        #endregion
         #region Public properties
-        public readonly Vector2[] Points;
+        public Vector2[] Points
+        {
+            get => (Vector2[])_points.Clone();
+            set
+            {
+                this._points = value;
+                this.Triangulate();
+            }
+        }
         #endregion
         #region Internal properties
-        internal readonly int[] TriangulatedIndices;
+        internal int[] TriangulatedIndices;
         #endregion
         #region Constructors
         public Polygon() : this(new[] { Vector2.Zero, Vector2.Zero, Vector2.Zero }) { }
         public Polygon(IEnumerable<Vector2> points)
         {
             if (points.Count() < 3) throw new ArgumentOutOfRangeException(nameof(points), "A polygon requires at least 3 points");
-            this.Points = new Vector2[points.Count()];
-            for (int i = 0; i < this.Points.Length; i++) this.Points[i] = points.ElementAt(i);
+            this._points = new Vector2[points.Count()];
+            this.TriangulatedIndices = Array.Empty<int>();
+            for (int i = 0; i < this._points.Length; i++) this._points[i] = points.ElementAt(i);
 
             float sum = 0;
-            for (int i = 0; i < this.Points.Length; i++)
+            for (int i = 0; i < this._points.Length; i++)
             {
-                Vector2 a = this.Points[i];
-                Vector2 b = this.Points[(i + 1) % this.Points.Length];
+                Vector2 a = this._points[i];
+                Vector2 b = this._points[(i + 1) % this._points.Length];
                 sum += (b.X - a.X) * (b.Y + a.Y);
             }
-            if (sum > 0) this.Points = this.Points.Reverse().ToArray();
+            if (sum > 0) this._points = this._points.Reverse().ToArray();
 
+            this.Triangulate();
+        }
+        #endregion
+        #region Operators
+        public static bool operator ==(Polygon a, Polygon b)
+        {
+            if (a._points.Length == b._points.Length) return false;
+            for (int i = 0; i < a._points.Length; i++) if (a._points[i] != b._points[i]) return false;
+            return true;
+        }
+        public static bool operator !=(Polygon a, Polygon b) => !(a == b);
+        #endregion
+        #region Private methods
+        private void Triangulate()
+        {
             int[] indices = new int[3 * (this.Points.Length - 2)];
             int indexIndex = 0; //Behold: masterful naming
             List<Vector2> trianglePoints = this.Points.ToList();
@@ -75,38 +100,28 @@ namespace MonoGeometry.Geometry
             this.TriangulatedIndices = indices;
         }
         #endregion
-        #region Operators
-        public static bool operator ==(Polygon a, Polygon b)
-        {
-            if (a.Points.Length == b.Points.Length) return false;
-            for (int i = 0; i < a.Points.Length; i++) if (a.Points[i] != b.Points[i]) return false;
-            return true;
-        }
-        public static bool operator !=(Polygon a, Polygon b) => !(a == b);
-        #endregion
         #region Public methods
         public override readonly bool Equals(object? obj) => (obj is Polygon polygon) && (this == polygon);
         public readonly bool Equals(Polygon other) => this == other;
-        public override readonly int GetHashCode() => StructuralComparisons.StructuralEqualityComparer.GetHashCode(Points);
+        public override readonly int GetHashCode() => StructuralComparisons.StructuralEqualityComparer.GetHashCode(this._points);
         public override readonly string ToString()
         {
             string returnString = "{";
-            foreach (Vector2 point in Points) returnString += point.ToString() + ", ";
+            foreach (Vector2 point in this._points) returnString += point.ToString() + ", ";
             return returnString.Remove(returnString.Length - 3) + "}";
         }
-        public static Polygon Transform(Polygon polygon, Matrix matrix, Vector2 origin)
+        public void Transform(Matrix matrix, Vector2 origin)
         {
-            Polygon returnPolygon;
-            returnPolygon = Transform(polygon, Matrix.CreateTranslation(-origin.X, -origin.Y, 0f));
-            returnPolygon = Transform(returnPolygon, matrix);
-            returnPolygon = Transform(returnPolygon, Matrix.CreateTranslation(origin.X, origin.Y, 0f));
-            return returnPolygon;
+            this.Transform(Matrix.CreateTranslation(-origin.X, -origin.Y, 0f));
+            this.Transform(matrix);
+            this.Transform(Matrix.CreateTranslation(origin.X, origin.Y, 0f));
         }
-        public static Polygon Transform(Polygon polygon, Matrix matrix)
+        public void Transform(Matrix matrix)
         {
-            Vector2[] newPoints = new Vector2[polygon.Points.Length];
-            for (int i = 0; i < polygon.Points.Length; i++) newPoints[i] = Vector2.Transform(polygon.Points[i], matrix);
-            return new Polygon(newPoints);
+            Vector2[] newPoints = new Vector2[this._points.Length];
+            for (int i = 0; i < this._points.Length; i++) newPoints[i] = Vector2.Transform(this._points[i], matrix);
+            this._points = newPoints;
+            this.Triangulate();
         }
         #endregion
     }

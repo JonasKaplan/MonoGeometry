@@ -2,7 +2,7 @@
 
 namespace MonoGeometry.Geometry
 {
-    public struct LineSegment : IEquatable<LineSegment>
+    public struct LineSegment : IEquatable<LineSegment>, ITransformable
     {
         #region Public properties
         public Vector2 P0 { get; set; }
@@ -27,19 +27,16 @@ namespace MonoGeometry.Geometry
         public readonly bool Equals(LineSegment other) => this == other;
         public override readonly int GetHashCode() => HashCode.Combine(this.P0, this.P1);
         public override readonly string ToString() => "{" + this.P0.ToString() + ", " + this.P1.ToString() + "}";
-        public static LineSegment Transform(LineSegment lineSegment, Matrix matrix, Vector2 origin)
+        public void Transform(Matrix matrix, Vector2 origin)
         {
-            LineSegment returnLineSegment;
-            returnLineSegment = Transform(lineSegment, Matrix.CreateTranslation(-origin.X, -origin.Y, 0f));
-            returnLineSegment = Transform(returnLineSegment, matrix);
-            returnLineSegment = Transform(returnLineSegment, Matrix.CreateTranslation(origin.X, origin.Y, 0f));
-            return returnLineSegment;
+            this.Transform(Matrix.CreateTranslation(-origin.X, -origin.Y, 0f));
+            this.Transform(matrix);
+            this.Transform(Matrix.CreateTranslation(origin.X, origin.Y, 0f));
         }
-        public static LineSegment Transform(LineSegment triangle, Matrix matrix)
+        public void Transform(Matrix matrix)
         {
-            return new(
-                Vector2.Transform(triangle.P0, matrix),
-                Vector2.Transform(triangle.P1, matrix));
+            this.P0 = Vector2.Transform(this.P0, matrix);
+            this.P1 = Vector2.Transform(this.P1, matrix);
         }
         #endregion
     }

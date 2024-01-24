@@ -39,20 +39,17 @@ namespace MonoGeometry.Geometry
             return (t1.Area + t2.Area + t3.Area - this.Area) <= 0.000001f;
         }
         public readonly Polygon ToPolygon() => new(new Vector2[] { this.P0, this.P1, this.P2 });
-        public static Triangle Transform(Triangle triangle, Matrix matrix, Vector2 origin)
+        public void Transform(Matrix matrix, Vector2 origin)
         {
-            Triangle returnTriangle;
-            returnTriangle = Transform(triangle, Matrix.CreateTranslation(-origin.X, -origin.Y, 0f));
-            returnTriangle = Transform(returnTriangle, matrix);
-            returnTriangle = Transform(returnTriangle, Matrix.CreateTranslation(origin.X, origin.Y, 0f));
-            return returnTriangle;
+            this.Transform(Matrix.CreateTranslation(-origin.X, -origin.Y, 0f));
+            this.Transform(matrix);
+            this.Transform(Matrix.CreateTranslation(origin.X, origin.Y, 0f));
         }
-        public static Triangle Transform(Triangle triangle, Matrix matrix)
+        public void Transform(Matrix matrix)
         {
-            return new(
-                Vector2.Transform(triangle.P0, matrix),
-                Vector2.Transform(triangle.P1, matrix),
-                Vector2.Transform(triangle.P2, matrix));
+            this.P0 = Vector2.Transform(this.P0, matrix);
+            this.P1 = Vector2.Transform(this.P1, matrix);
+            this.P2 = Vector2.Transform(this.P2, matrix);
         }
         #endregion
     }
