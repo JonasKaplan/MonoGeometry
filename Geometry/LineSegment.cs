@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace MonoGeometry.Geometry
 {
@@ -9,6 +10,7 @@ namespace MonoGeometry.Geometry
         public Vector2 P1 { get; set; }
         public readonly float Length => MathF.Sqrt(this.LengthSquared);
         public readonly float LengthSquared => ((this.P1.X - this.P0.X) * (this.P1.X - this.P0.X)) + ((this.P1.Y - this.P0.Y) * (this.P1.Y - this.P0.Y));
+        public readonly Vector2 Center => 0.5f * (this.P0 + this.P1);
         #endregion
         #region Constructors
         public LineSegment() : this(Vector2.Zero, Vector2.Zero) { }
@@ -27,13 +29,13 @@ namespace MonoGeometry.Geometry
         public readonly bool Equals(LineSegment other) => this == other;
         public override readonly int GetHashCode() => HashCode.Combine(this.P0, this.P1);
         public override readonly string ToString() => "{" + this.P0.ToString() + ", " + this.P1.ToString() + "}";
-        public void Transform(Matrix matrix, Vector2 origin)
+        internal void Transform(Matrix matrix, Vector2 origin)
         {
             this.Transform(Matrix.CreateTranslation(-origin.X, -origin.Y, 0f));
             this.Transform(matrix);
             this.Transform(Matrix.CreateTranslation(origin.X, origin.Y, 0f));
         }
-        public void Transform(Matrix matrix)
+        internal void Transform(Matrix matrix)
         {
             this.P0 = Vector2.Transform(this.P0, matrix);
             this.P1 = Vector2.Transform(this.P1, matrix);

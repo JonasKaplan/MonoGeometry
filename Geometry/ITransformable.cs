@@ -4,7 +4,8 @@ namespace MonoGeometry.Geometry
 {
     public interface ITransformable
     {
-        public void Transform(Matrix matrix, Vector2 origin);
-        public void Transform(Matrix matrix);
+        public Vector2 Center { get; }
+        internal void Transform(Matrix matrix, Vector2 origin);
+        internal void Transform(Matrix matrix);
     }
 }

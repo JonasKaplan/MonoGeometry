@@ -1,8 +1,9 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace MonoGeometry.Geometry
 {
-    public struct Triangle : IEquatable<Triangle>
+    public struct Triangle : IEquatable<Triangle>, ITransformable
     {
         #region Public properties
         public Vector2 P0 { get; set; }
@@ -39,13 +40,13 @@ namespace MonoGeometry.Geometry
             return (t1.Area + t2.Area + t3.Area - this.Area) <= 0.000001f;
         }
         public readonly Polygon ToPolygon() => new(new Vector2[] { this.P0, this.P1, this.P2 });
-        public void Transform(Matrix matrix, Vector2 origin)
+        internal void Transform(Matrix matrix, Vector2 origin)
         {
             this.Transform(Matrix.CreateTranslation(-origin.X, -origin.Y, 0f));
             this.Transform(matrix);
             this.Transform(Matrix.CreateTranslation(origin.X, origin.Y, 0f));
         }
-        public void Transform(Matrix matrix)
+        internal void Transform(Matrix matrix)
         {
             this.P0 = Vector2.Transform(this.P0, matrix);
             this.P1 = Vector2.Transform(this.P1, matrix);

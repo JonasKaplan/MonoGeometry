@@ -12,11 +12,20 @@ namespace MonoGeometry.Geometry
         #region Public properties
         public Vector2[] Points
         {
-            get => (Vector2[])_points.Clone();
+            readonly get => (Vector2[])_points.Clone();
             set
             {
                 this._points = value;
                 this.Triangulate();
+            }
+        }
+        public readonly Vector2 Center
+        {
+            get
+            {
+                Vector2 totalVector = Vector2.Zero;
+                foreach (Vector2 point in this._points) totalVector += point;
+                return totalVector / this._points.Length;
             }
         }
         #endregion
@@ -32,6 +41,7 @@ namespace MonoGeometry.Geometry
             this.TriangulatedIndices = Array.Empty<int>();
             for (int i = 0; i < this._points.Length; i++) this._points[i] = points.ElementAt(i);
 
+            //Guarantee that the points are stored with a clockwise winding order
             float sum = 0;
             for (int i = 0; i < this._points.Length; i++)
             {
@@ -110,13 +120,13 @@ namespace MonoGeometry.Geometry
             foreach (Vector2 point in this._points) returnString += point.ToString() + ", ";
             return returnString.Remove(returnString.Length - 3) + "}";
         }
-        public void Transform(Matrix matrix, Vector2 origin)
+        internal void Transform(Matrix matrix, Vector2 origin)
         {
             this.Transform(Matrix.CreateTranslation(-origin.X, -origin.Y, 0f));
             this.Transform(matrix);
             this.Transform(Matrix.CreateTranslation(origin.X, origin.Y, 0f));
         }
-        public void Transform(Matrix matrix)
+        internal void Transform(Matrix matrix)
         {
             Vector2[] newPoints = new Vector2[this._points.Length];
             for (int i = 0; i < this._points.Length; i++) newPoints[i] = Vector2.Transform(this._points[i], matrix);

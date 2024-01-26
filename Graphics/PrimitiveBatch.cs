@@ -8,9 +8,6 @@ namespace MonoGeometry.Drawing
     //Based heavily on https://www.youtube.com/watch?v=ZqwfoMjJAO4
     public sealed class PrimitiveBatch : IDisposable
     {
-        #region Constants
-        private const int _defaultMaxVertexCount = 2048;
-        #endregion
         #region Private fields
         private bool _isDisposed;
 
@@ -27,8 +24,11 @@ namespace MonoGeometry.Drawing
 
         private bool _isBatching;
         #endregion
+        #region Public properties
+        public Color FillColor { get; set; } = Color.Black;
+        #endregion
         #region Constructors
-        public PrimitiveBatch(GraphicsDevice graphicsDevice) : this(graphicsDevice, _defaultMaxVertexCount) { }
+        public PrimitiveBatch(GraphicsDevice graphicsDevice) : this(graphicsDevice, 2048) { }
         public PrimitiveBatch(GraphicsDevice graphicsDevice, int maxVertexCount)
         {
             this._isDisposed = false;
@@ -107,8 +107,9 @@ namespace MonoGeometry.Drawing
             this.Flush();
             this._isBatching = false;
         }
-        public void Triangle(Vector2 p1, Vector2 p2, Vector2 p3, Color color) => this.Triangle(p1.X, p1.Y, p2.X, p2.Y, p3.X, p3.Y, color);
-        public void Triangle(float x1, float y1, float x2, float y2, float x3, float y3, Color color)
+        public void Triangle(Triangle triangle) => this.Triangle(triangle.P0.X, triangle.P0.Y, triangle.P1.X, triangle.P1.Y, triangle.P2.X, triangle.P2.Y);
+        public void Triangle(Vector2 p0, Vector2 p1, Vector2 p2) => this.Triangle(p0.X, p0.Y, p1.X, p1.Y, p2.X, p2.Y);
+        public void Triangle(float x0, float y0, float x1, float y1, float x2, float y2)
         {
             this.EnsureBatching();
             this.HandleOverflow(3, 3);
@@ -117,15 +118,15 @@ namespace MonoGeometry.Drawing
             this._indices[this._indexCount++] = 1 + this._vertexCount;
             this._indices[this._indexCount++] = 2 + this._vertexCount;
 
-            this._vertices[this._vertexCount++] = new VertexPositionColor(new Vector3(x1, y1, 0f), color);
-            this._vertices[this._vertexCount++] = new VertexPositionColor(new Vector3(x2, y2, 0f), color);
-            this._vertices[this._vertexCount++] = new VertexPositionColor(new Vector3(x3, y3, 0f), color);
+            this._vertices[this._vertexCount++] = new VertexPositionColor(new Vector3(x0, y0, 0f), this.FillColor);
+            this._vertices[this._vertexCount++] = new VertexPositionColor(new Vector3(x1, y1, 0f), this.FillColor);
+            this._vertices[this._vertexCount++] = new VertexPositionColor(new Vector3(x2, y2, 0f), this.FillColor);
 
             this._shapeCount++;
         }
-        public void Rectangle(Rectangle rectangle, Color color) => this.Rectangle(rectangle.Left, rectangle.Top, rectangle.Right, rectangle.Bottom, color);
-        public void Rectangle(Vector2 topLeft, Vector2 bottomRight, Color color) => this.Rectangle(topLeft.X, topLeft.Y, bottomRight.X, bottomRight.Y, color);
-        public void Rectangle(float topLeftX, float topLeftY, float bottomRightX, float bottomRightY, Color color)
+        public void Rectangle(Rectangle rectangle) => this.Rectangle(rectangle.Left, rectangle.Top, rectangle.Right, rectangle.Bottom);
+        public void Rectangle(Vector2 topLeft, Vector2 bottomRight) => this.Rectangle(topLeft.X, topLeft.Y, bottomRight.X, bottomRight.Y);
+        public void Rectangle(float topLeftX, float topLeftY, float bottomRightX, float bottomRightY)
         {
             this.EnsureBatching();
             this.HandleOverflow(4, 6);
@@ -138,16 +139,16 @@ namespace MonoGeometry.Drawing
             this._indices[this._indexCount++] = 2 + this._vertexCount;
             this._indices[this._indexCount++] = 3 + this._vertexCount;
 
-            this._vertices[this._vertexCount++] = new VertexPositionColor(new Vector3(topLeftX, topLeftY, 0f), color);
-            this._vertices[this._vertexCount++] = new VertexPositionColor(new Vector3(bottomRightX, topLeftY, 0f), color);
-            this._vertices[this._vertexCount++] = new VertexPositionColor(new Vector3(bottomRightX, bottomRightY, 0f), color);
-            this._vertices[this._vertexCount++] = new VertexPositionColor(new Vector3(topLeftX, bottomRightY, 0f), color);
+            this._vertices[this._vertexCount++] = new VertexPositionColor(new Vector3(topLeftX, topLeftY, 0f), this.FillColor);
+            this._vertices[this._vertexCount++] = new VertexPositionColor(new Vector3(bottomRightX, topLeftY, 0f), this.FillColor);
+            this._vertices[this._vertexCount++] = new VertexPositionColor(new Vector3(bottomRightX, bottomRightY, 0f), this.FillColor);
+            this._vertices[this._vertexCount++] = new VertexPositionColor(new Vector3(topLeftX, bottomRightY, 0f), this.FillColor);
 
             this._shapeCount++;
         }
-        public void RegularPolygon(Vector2 centerLocation, float centerToVertexDistance, int sideCount, Color color) =>
-            this.RegularPolygon(centerLocation.X, centerLocation.Y, centerToVertexDistance, sideCount, color);
-        public void RegularPolygon(float x, float y, float centerToVertexDistance, int sideCount, Color color)
+        public void RegularPolygon(Vector2 centerLocation, float centerToVertexDistance, int sideCount) =>
+            this.RegularPolygon(centerLocation.X, centerLocation.Y, centerToVertexDistance, sideCount);
+        public void RegularPolygon(float x, float y, float centerToVertexDistance, int sideCount)
         {
             this.EnsureBatching();
             if (sideCount < 3) throw new ArgumentOutOfRangeException(nameof(sideCount), "Regular polygons must have at least 3 sides");
@@ -167,16 +168,16 @@ namespace MonoGeometry.Drawing
             for (int i = 0; i < sideCount; i++)
             {
                 offsetVector = Vector3.Transform(offsetVector, rotation);
-                this._vertices[this._vertexCount++] = new VertexPositionColor(center + offsetVector, color);
+                this._vertices[this._vertexCount++] = new VertexPositionColor(center + offsetVector, this.FillColor);
             }
-            this._vertices[this._vertexCount++] = new VertexPositionColor(center, color);
+            this._vertices[this._vertexCount++] = new VertexPositionColor(center, this.FillColor);
 
             this._shapeCount++;
         }
-        public void Circle(Vector2 centerLocation, float radius, Color color) => this.Circle(centerLocation.X, centerLocation.Y, radius, color);
-        public void Circle(float x, float y, float radius, Color color) => this.Ellipse(x, y, radius, 1f, color);
-        public void Ellipse(Vector2 location, float radius, float eccentricity, Color color) => this.Ellipse(location.X, location.Y, radius, eccentricity, color);
-        public void Ellipse(float x, float y, float radius, float eccentricity, Color color)
+        public void Circle(Vector2 centerLocation, float radius) => this.Circle(centerLocation.X, centerLocation.Y, radius);
+        public void Circle(float x, float y, float radius) => this.Ellipse(x, y, radius, 1f);
+        public void Ellipse(Vector2 location, float radius, float eccentricity) => this.Ellipse(location.X, location.Y, radius, eccentricity);
+        public void Ellipse(float x, float y, float radius, float eccentricity)
         {
             this.EnsureBatching();
             if (eccentricity == 0) throw new ArgumentOutOfRangeException(nameof(eccentricity), "Eccentricity cannot be 0");
@@ -199,23 +200,23 @@ namespace MonoGeometry.Drawing
             for (int i = 0; i < sideCount; i++)
             {
                 offsetVector = Vector3.Transform(offsetVector, rotation);
-                this._vertices[this._vertexCount++] = new VertexPositionColor(Vector3.Transform(center + offsetVector, scale), color);
+                this._vertices[this._vertexCount++] = new VertexPositionColor(Vector3.Transform(center + offsetVector, scale), this.FillColor);
             }
-            this._vertices[this._vertexCount++] = new VertexPositionColor(center, color);
+            this._vertices[this._vertexCount++] = new VertexPositionColor(center, this.FillColor);
 
             this._shapeCount++;
         }
-        public void LineSegment(Vector2 p1, Vector2 p2, float width, Color color) => this.LineSegment(p1.X, p1.Y, p2.X, p2.Y, width, color);
-        public void LineSegment(float p1X, float p1Y, float p2X, float p2Y, float width, Color color)
+        public void LineSegment(Vector2 p0, Vector2 p1, float width) => this.LineSegment(p0.X, p0.Y, p1.X, p1.Y, width);
+        public void LineSegment(float p0X, float p0Y, float p1X, float p1Y, float width)
         {
             this.EnsureBatching();
             this.HandleOverflow(4, 6);
 
-            Vector2 tail = new(p1X, p1Y);
-            Vector2 head = new(p2X, p2Y);
+            Vector2 tail = new(p0X, p0Y);
+            Vector2 head = new(p1X, p1Y);
             Vector2 offset = head - tail;
             offset.Normalize();
-            offset = Vector2.Transform(offset, Matrix.CreateRotationZ(MathHelper.PiOver2)) * (width / 2);
+            offset = new Vector2(offset.Y, -offset.X) * (width / 2);
 
             this._indices[this._indexCount++] = 0 + this._vertexCount;
             this._indices[this._indexCount++] = 2 + this._vertexCount;
@@ -225,21 +226,21 @@ namespace MonoGeometry.Drawing
             this._indices[this._indexCount++] = 1 + this._vertexCount;
             this._indices[this._indexCount++] = 3 + this._vertexCount;
 
-            this._vertices[this._vertexCount++] = new VertexPositionColor(new Vector3(tail + offset, 0f), color);
-            this._vertices[this._vertexCount++] = new VertexPositionColor(new Vector3(tail - offset, 0f), color);
-            this._vertices[this._vertexCount++] = new VertexPositionColor(new Vector3(head + offset, 0f), color);
-            this._vertices[this._vertexCount++] = new VertexPositionColor(new Vector3(head - offset, 0f), color);
+            this._vertices[this._vertexCount++] = new VertexPositionColor(new Vector3(tail + offset, 0f), this.FillColor);
+            this._vertices[this._vertexCount++] = new VertexPositionColor(new Vector3(tail - offset, 0f), this.FillColor);
+            this._vertices[this._vertexCount++] = new VertexPositionColor(new Vector3(head + offset, 0f), this.FillColor);
+            this._vertices[this._vertexCount++] = new VertexPositionColor(new Vector3(head - offset, 0f), this.FillColor);
 
             this._shapeCount++;
         }
-        public void Polygon(Polygon polygon, Color color)
+        public void Polygon(Polygon polygon)
         {
             this.EnsureBatching();
             int[] indices = polygon.TriangulatedIndices;
             this.HandleOverflow(polygon.Points.Length, indices.Length);
 
             foreach (int index in indices) this._indices[this._indexCount++] = index + this._vertexCount;
-            foreach (Vector2 point in polygon.Points) this._vertices[this._vertexCount++] = new VertexPositionColor(new Vector3(point, 0f), color);
+            foreach (Vector2 point in polygon.Points) this._vertices[this._vertexCount++] = new VertexPositionColor(new Vector3(point, 0f), this.FillColor);
 
             this._shapeCount++;
         }
