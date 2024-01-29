@@ -27,11 +27,18 @@ namespace MonoGeometry.Geometry
         public readonly bool Equals(Circle other) => this == other;
         public override readonly int GetHashCode() => HashCode.Combine(this.Center, this.Radius);
         public override readonly string ToString() => "{Center:" + this.Center.ToString() + "Radius:" + this.Radius.ToString() + "}";
-        public readonly bool Intersects(Circle other)
+        public readonly bool Intersects(Circle other) => GeometryHelper.Distance(this.Center, other.Center) <= this.Radius + other.Radius;
+        public readonly Circle Translate(Vector2 delta)
         {
-            float distanceSquared = ((this.Center.X - other.Center.X) * (this.Center.X - other.Center.X)) + ((this.Center.Y - other.Center.Y) * (this.Center.Y - other.Center.Y));
-            float sumOfRadii = this.Radius + other.Radius;
-            return distanceSquared < sumOfRadii;
+            Circle translated = this;
+            translated.Center += delta;
+            return translated;
+        }
+        public readonly Circle Scale(float factor)
+        {
+            Circle scaled = this;
+            scaled.Radius *= factor;
+            return scaled;
         }
         #endregion
     }

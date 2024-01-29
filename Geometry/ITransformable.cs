@@ -2,10 +2,10 @@
 
 namespace MonoGeometry.Geometry
 {
-    public interface ITransformable
+    public interface ITransformable<T>
     {
         public Vector2 Center { get; }
-        internal void Transform(Matrix matrix, Vector2 origin);
-        internal void Transform(Matrix matrix);
+        public T Transform(Matrix matrix, Vector2 origin);
+        public T Transform(Matrix matrix);
     }
 }

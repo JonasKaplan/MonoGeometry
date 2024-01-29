@@ -4,15 +4,16 @@ using System.Collections.Generic;
 
 namespace MonoGeometry.Geometry
 {
-    public struct Polygon : ITransformable
+    public struct Polygon : ITransformable<Polygon>
     {
         #region Private fields
         private Vector2[] _points;
+        private int[] _triangulatedIndices;
         #endregion
         #region Public properties
         public Vector2[] Points
         {
-            readonly get => (Vector2[])_points.Clone();
+            readonly get => (Vector2[])this._points.Clone();
             set
             {
                 this._points = value;
@@ -28,9 +29,27 @@ namespace MonoGeometry.Geometry
                 return totalVector / this._points.Length;
             }
         }
+        public readonly float Perimeter
+        {
+            get
+            {
+                float perimeter = 0;
+                for (int i = 0; i < this._points.Length; i++) perimeter += (this._points[(i + 1) % this._points.Length] - this._points[i]).Length();
+                return perimeter;
+            }
+        }
+        public readonly float Area
+        {
+            get
+            {
+                float area = 0;
+                for (int i = 0; i < this.TriangulatedIndices.Length; i += 3) area += new Triangle(this._points[i], this._points[i + 1], this._points[i + 2]).Area;
+                return area;
+            }
+        }
         #endregion
         #region Internal properties
-        internal int[] TriangulatedIndices;
+        internal readonly int[] TriangulatedIndices => (int[])this._triangulatedIndices.Clone();
         #endregion
         #region Constructors
         public Polygon() : this(new[] { Vector2.Zero, Vector2.Zero, Vector2.Zero }) { }
@@ -38,7 +57,7 @@ namespace MonoGeometry.Geometry
         {
             if (points.Count() < 3) throw new ArgumentOutOfRangeException(nameof(points), "A polygon requires at least 3 points");
             this._points = new Vector2[points.Count()];
-            this.TriangulatedIndices = Array.Empty<int>();
+            this._triangulatedIndices = Array.Empty<int>();
             for (int i = 0; i < this._points.Length; i++) this._points[i] = points.ElementAt(i);
 
             //Guarantee that the points are stored with a clockwise winding order
@@ -107,7 +126,7 @@ namespace MonoGeometry.Geometry
             indices[indexIndex++] = Array.IndexOf(this.Points, trianglePoints[1]);
             indices[indexIndex++] = Array.IndexOf(this.Points, trianglePoints[2]);
 
-            this.TriangulatedIndices = indices;
+            this._triangulatedIndices = indices;
         }
         #endregion
         #region Public methods
@@ -120,18 +139,18 @@ namespace MonoGeometry.Geometry
             foreach (Vector2 point in this._points) returnString += point.ToString() + ", ";
             return returnString.Remove(returnString.Length - 3) + "}";
         }
-        internal void Transform(Matrix matrix, Vector2 origin)
+        public readonly Polygon Transform(Matrix matrix, Vector2 origin)
         {
-            this.Transform(Matrix.CreateTranslation(-origin.X, -origin.Y, 0f));
-            this.Transform(matrix);
-            this.Transform(Matrix.CreateTranslation(origin.X, origin.Y, 0f));
+            Polygon transformed = this.Transform(Matrix.CreateTranslation(-origin.X, -origin.Y, 0f));
+            transformed = transformed.Transform(matrix);
+            transformed = transformed.Transform(Matrix.CreateTranslation(origin.X, origin.Y, 0f));
+            return transformed;
         }
-        internal void Transform(Matrix matrix)
+        public readonly Polygon Transform(Matrix matrix)
         {
             Vector2[] newPoints = new Vector2[this._points.Length];
             for (int i = 0; i < this._points.Length; i++) newPoints[i] = Vector2.Transform(this._points[i], matrix);
-            this._points = newPoints;
-            this.Triangulate();
+            return new Polygon(newPoints);
         }
         #endregion
     }

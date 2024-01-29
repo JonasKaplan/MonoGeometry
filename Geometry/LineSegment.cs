@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace MonoGeometry.Geometry
 {
-    public struct LineSegment : IEquatable<LineSegment>, ITransformable
+    public struct LineSegment : IEquatable<LineSegment>, ITransformable<LineSegment>
     {
         #region Public properties
         public Vector2 P0 { get; set; }
@@ -29,16 +29,28 @@ namespace MonoGeometry.Geometry
         public readonly bool Equals(LineSegment other) => this == other;
         public override readonly int GetHashCode() => HashCode.Combine(this.P0, this.P1);
         public override readonly string ToString() => "{" + this.P0.ToString() + ", " + this.P1.ToString() + "}";
-        internal void Transform(Matrix matrix, Vector2 origin)
+        public static bool Intersect(LineSegment a, LineSegment b)
         {
-            this.Transform(Matrix.CreateTranslation(-origin.X, -origin.Y, 0f));
-            this.Transform(matrix);
-            this.Transform(Matrix.CreateTranslation(origin.X, origin.Y, 0f));
+            Triangle t0 = new(a.P0, b.P0, b.P1);
+            Triangle t1 = new(a.P1, b.P0, b.P1);
+            Triangle t2 = new(a.P0, a.P1, b.P0);
+            Triangle t3 = new(a.P0, a.P1, b.P1);
+            return MathF.Abs(t0.Area + t1.Area - t2.Area - t3.Area) <= 0.00001f;
         }
-        internal void Transform(Matrix matrix)
+        public readonly LineSegment Transform(Matrix matrix, Vector2 origin)
         {
-            this.P0 = Vector2.Transform(this.P0, matrix);
-            this.P1 = Vector2.Transform(this.P1, matrix);
+            LineSegment transformed = this.Transform(Matrix.CreateTranslation(-origin.X, -origin.Y, 0f));
+            transformed = transformed.Transform(matrix);
+            transformed = transformed.Transform(Matrix.CreateTranslation(origin.X, origin.Y, 0f));
+            return transformed;
+        }
+        public readonly LineSegment Transform(Matrix matrix)
+        {
+            return new()
+            {
+                P0 = Vector2.Transform(this.P0, matrix),
+                P1 = Vector2.Transform(this.P1, matrix)
+            };
         }
         #endregion
     }
