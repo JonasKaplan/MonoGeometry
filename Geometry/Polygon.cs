@@ -141,10 +141,8 @@ namespace MonoGeometry.Geometry
         }
         public readonly Polygon Transform(Matrix matrix, Vector2 origin)
         {
-            Polygon transformed = this.Transform(Matrix.CreateTranslation(-origin.X, -origin.Y, 0f));
-            transformed = transformed.Transform(matrix);
-            transformed = transformed.Transform(Matrix.CreateTranslation(origin.X, origin.Y, 0f));
-            return transformed;
+            Matrix transform = Matrix.CreateTranslation(-origin.X, -origin.Y, 0f) * matrix * Matrix.CreateTranslation(origin.X, origin.Y, 0f);
+            return this.Transform(transform);
         }
         public readonly Polygon Transform(Matrix matrix)
         {

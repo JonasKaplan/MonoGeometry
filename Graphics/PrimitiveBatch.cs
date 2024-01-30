@@ -184,7 +184,6 @@ namespace MonoGeometry.Drawing
             int sideCount = (int)radius + 4;
             this.HandleOverflow(sideCount + 1, sideCount * 3);
 
-            //TODO: Make sure the math here actually works as intended
             Vector3 center = new(x, y, 0f);
             Vector3 offsetVector = new(0f, radius, 0f);
             Matrix rotation = Matrix.CreateRotationZ(MathHelper.Tau / sideCount);
@@ -233,6 +232,7 @@ namespace MonoGeometry.Drawing
 
             this._shapeCount++;
         }
+        public void Polygon(IEnumerable<Vector2> points) => this.Polygon(new Polygon(points)); //TODO: this makes me sad
         public void Polygon(Polygon polygon)
         {
             this.EnsureBatching();

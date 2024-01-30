@@ -42,10 +42,8 @@ namespace MonoGeometry.Geometry
         public readonly Polygon ToPolygon() => new(new Vector2[] { this.P0, this.P1, this.P2 });
         public Triangle Transform(Matrix matrix, Vector2 origin)
         {
-            Triangle transformed = this.Transform(Matrix.CreateTranslation(-origin.X, -origin.Y, 0f));
-            transformed = transformed.Transform(matrix);
-            transformed = transformed.Transform(Matrix.CreateTranslation(origin.X, origin.Y, 0f));
-            return transformed;
+            Matrix transform = Matrix.CreateTranslation(-origin.X, -origin.Y, 0f) * matrix * Matrix.CreateTranslation(origin.X, origin.Y, 0f);
+            return this.Transform(transform);
         }
         public Triangle Transform(Matrix matrix)
         {
