@@ -1,10 +1,17 @@
 ﻿using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 
 namespace MonoGeometry.Geometry
 {
     public struct LineSegment : IEquatable<LineSegment>, ITransformable<LineSegment>
     {
+        #region Constants
+        private enum TripletType
+        {
+            Clockwise,
+            Counterclockwise,
+            Collinear
+        }
+        #endregion
         #region Public properties
         public Vector2 P0 { get; set; }
         public Vector2 P1 { get; set; }
@@ -29,13 +36,30 @@ namespace MonoGeometry.Geometry
         public readonly bool Equals(LineSegment other) => this == other;
         public override readonly int GetHashCode() => HashCode.Combine(this.P0, this.P1);
         public override readonly string ToString() => "{" + this.P0.ToString() + ", " + this.P1.ToString() + "}";
+        public readonly bool Contains(Vector2 point) =>
+            (point.X <= MathF.Max(this.P0.X, this.P1.X)) && (point.X >= MathF.Min(this.P0.X, this.P1.X)) && (point.Y <= MathF.Max(this.P0.Y, this.P1.Y)) && (point.Y >= MathF.Min(this.P0.Y, this.P1.Y));
+        private static TripletType Type(Vector2 a, Vector2 b, Vector2 c)
+        {
+            float check = ((b.Y - a.Y) * (c.X - b.X)) - ((b.X - a.X) * (c.Y - b.Y));
+            if (MathF.Abs(check) <= 0.00001f) return TripletType.Collinear;
+            return check > 0 ? TripletType.Clockwise : TripletType.Counterclockwise;
+        }
         public static bool Intersect(LineSegment a, LineSegment b)
         {
-            Triangle t0 = new(a.P0, b.P0, b.P1);
-            Triangle t1 = new(a.P1, b.P0, b.P1);
-            Triangle t2 = new(a.P0, a.P1, b.P0);
-            Triangle t3 = new(a.P0, a.P1, b.P1);
-            return MathF.Abs(t0.Area + t1.Area - t2.Area - t3.Area) <= 0.00001f;
+            //Algorithm: https://www.geeksforgeeks.org/check-if-two-given-line-segments-intersect/
+            TripletType t0 = Type(a.P0, a.P1, b.P0);
+            TripletType t1 = Type(a.P0, a.P1, b.P1);
+            TripletType t2 = Type(b.P0, b.P1, a.P0);
+            TripletType t3 = Type(b.P0, b.P1, a.P1);
+
+            if ((t0 != t1) && (t2 != t3)) return true;
+
+            if ((t0 == TripletType.Collinear) && a.Contains(b.P0)) return true;
+            if ((t1 == TripletType.Collinear) && a.Contains(b.P1)) return true;
+            if ((t2 == TripletType.Collinear) && b.Contains(a.P0)) return true;
+            if ((t3 == TripletType.Collinear) && b.Contains(a.P1)) return true;
+
+            return false;
         }
         public readonly LineSegment Transform(Matrix matrix, Vector2 origin)
         {
