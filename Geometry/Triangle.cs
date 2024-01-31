@@ -3,6 +3,9 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace MonoGeometry.Geometry
 {
+    /// <summary>
+    /// Describes a 2D triangle
+    /// </summary>
     public struct Triangle : IEquatable<Triangle>, ITransformable<Triangle>
     {
         #region Public properties

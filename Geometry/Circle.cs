@@ -2,6 +2,9 @@
 
 namespace MonoGeometry.Geometry
 {
+    /// <summary>
+    /// Describes a 2D circle
+    /// </summary>
     public struct Circle : IEquatable<Circle>
     {
         #region Public properties

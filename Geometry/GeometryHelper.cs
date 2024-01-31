@@ -2,6 +2,9 @@
 
 namespace MonoGeometry.Geometry
 {
+    /// <summary>
+    /// Contains methods for common geometric operations
+    /// </summary>
     public sealed class GeometryHelper
     {
         /// <summary>

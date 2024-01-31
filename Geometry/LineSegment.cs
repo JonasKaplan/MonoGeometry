@@ -2,6 +2,9 @@
 
 namespace MonoGeometry.Geometry
 {
+    /// <summary>
+    /// Describes a 2D line segment
+    /// </summary>
     public struct LineSegment : IEquatable<LineSegment>, ITransformable<LineSegment>
     {
         #region Public properties

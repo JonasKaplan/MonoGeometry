@@ -4,6 +4,9 @@ using System.Collections.Generic;
 
 namespace MonoGeometry.Geometry
 {
+    /// <summary>
+    /// Describes a 2D polygon. Does not allow for self-intersection
+    /// </summary>
     public struct Polygon : ITransformable<Polygon>
     {
         #region Private fields

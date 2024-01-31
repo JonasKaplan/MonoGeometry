@@ -2,6 +2,10 @@
 
 namespace MonoGeometry.Geometry
 {
+    /// <summary>
+    /// Interface for transformable 2D shapes
+    /// </summary>
+    /// <typeparam name="T">Must be the same as the struct or class thast implements this interface</typeparam>
     public interface ITransformable<T>
     {
         /// <summary>
