@@ -7,10 +7,19 @@ namespace MonoGeometry.Geometry
     public struct Polygon : ITransformable<Polygon>
     {
         #region Private fields
+        /// <summary>
+        /// The points defining this <see cref="Polygon"/>
+        /// </summary>
         private Vector2[] _points;
+        /// <summary>
+        /// The indices, within <see cref="this._points"/>, of the points that form triangles for drawing
+        /// </summary>
         private int[] _triangulatedIndices;
         #endregion
         #region Public properties
+        /// <summary>
+        /// The points defining this <see cref="Polygon"/>
+        /// </summary>
         public Vector2[] Points
         {
             readonly get => (Vector2[])this._points.Clone();
@@ -20,6 +29,9 @@ namespace MonoGeometry.Geometry
                 this.Triangulate();
             }
         }
+        /// <summary>
+        /// The center of this <see cref="Polygon"/>, defined as the average of all x and y coordinates
+        /// </summary>
         public readonly Vector2 Center
         {
             get
@@ -29,6 +41,9 @@ namespace MonoGeometry.Geometry
                 return totalVector / this._points.Length;
             }
         }
+        /// <summary>
+        /// The perimeter of this <see cref="Polygon"/>
+        /// </summary>
         public readonly float Perimeter
         {
             get
@@ -38,6 +53,9 @@ namespace MonoGeometry.Geometry
                 return perimeter;
             }
         }
+        /// <summary>
+        /// The area of this <see cref="Polygon"/>
+        /// </summary>
         public readonly float Area
         {
             get
@@ -49,10 +67,21 @@ namespace MonoGeometry.Geometry
         }
         #endregion
         #region Internal properties
+        /// <summary>
+        /// The indices, within <see cref="this.Points"/>, of the points that form triangles for drawing
+        /// </summary>
         internal readonly int[] TriangulatedIndices => (int[])this._triangulatedIndices.Clone();
         #endregion
         #region Constructors
+        /// <summary>
+        /// Creates a new <see cref="Polygon"/> instance with three points, all at the origin
+        /// </summary>
         public Polygon() : this(new[] { Vector2.Zero, Vector2.Zero, Vector2.Zero }) { }
+        /// <summary>
+        /// Creates a new <see cref="Polygon"/> instance, with a defined set of points. Points are always stored internally in a counter-clockwise winding order, regardless of how they are passed to this constructor
+        /// </summary>
+        /// <param name="points">The set of points used to define this <see cref="Polygon"/></param>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if the size of <c>points</c> is less than 3</exception>
         public Polygon(IEnumerable<Vector2> points)
         {
             if (points.Count() < 3) throw new ArgumentOutOfRangeException(nameof(points), "A polygon requires at least 3 points");
@@ -74,15 +103,30 @@ namespace MonoGeometry.Geometry
         }
         #endregion
         #region Operators
+        /// <summary>
+        /// Compares weather two <see cref="Polygon"/> instances are equal
+        /// </summary>
+        /// <param name="a"><see cref="Polygon"/> instance on the left of the equal sign</param>
+        /// <param name="b"><see cref="Polygon"/> instance on the right of the equal sign</param>
+        /// <returns><c>true</c> if the instances are equal; <c>false</c> otherwise</returns>
         public static bool operator ==(Polygon a, Polygon b)
         {
             if (a._points.Length == b._points.Length) return false;
             for (int i = 0; i < a._points.Length; i++) if (a._points[i] != b._points[i]) return false;
             return true;
         }
+        /// <summary>
+        /// Compares weather two <see cref="Polygon"/> instances are not equal
+        /// </summary>
+        /// <param name="a"><see cref="Polygon"/> instance on the left of the not equal sign</param>
+        /// <param name="b"><see cref="Polygon"/> instance on the right of the not equal sign</param>
+        /// <returns><c>true</c> if the instances are not equal; <c>false</c> otherwise</returns>
         public static bool operator !=(Polygon a, Polygon b) => !(a == b);
         #endregion
         #region Private methods
+        /// <summary>
+        /// Sets the value of <see cref="this._triangulatedIndices"/> based on the current state of <see cref="this._points"/>
+        /// </summary>
         private void Triangulate()
         {
             int[] indices = new int[3 * (this.Points.Length - 2)];
@@ -130,20 +174,50 @@ namespace MonoGeometry.Geometry
         }
         #endregion
         #region Public methods
+        /// <summary>
+        /// Compares whether current instance is equal to specified <see cref="object"/>
+        /// </summary>
+        /// <param name="obj">The <see cref="object"/> to compare</param>
+        /// <returns><c>true</c> if the instances are equal; <c>false</c> otherwise</returns>
         public override readonly bool Equals(object? obj) => (obj is Polygon polygon) && (this == polygon);
+        /// <summary>
+        /// Compares whether current instance is equal to specified <see cref="Polygon"/>
+        /// </summary>
+        /// <param name="other">The <see cref="Polygont"/> to compare</param>
+        /// <returns><c>true</c> if the instances are equal; <c>false</c> otherwise</returns>
         public readonly bool Equals(Polygon other) => this == other;
+        /// <summary>
+        /// Gets the hash code of this <see cref="Polygon"/>
+        /// </summary>
+        /// <returns>Hash code of this <see cref="Polygon"/></returns>
         public override readonly int GetHashCode() => StructuralComparisons.StructuralEqualityComparer.GetHashCode(this._points);
+        /// <summary>
+        /// Returns a <see cref="string"/> representation of this <see cref="Polygon"/> in the format:
+        /// {{P1}, {P2}, ... {Pn}}
+        /// </summary>
+        /// <returns><see cref="string"/> representation of this <see cref="Polygon"/></returns>
         public override readonly string ToString()
         {
             string returnString = "{";
             foreach (Vector2 point in this._points) returnString += point.ToString() + ", ";
             return returnString.Remove(returnString.Length - 3) + "}";
         }
+        /// <summary>
+        /// Creates a new <see cref="Polygon"/> instance, transformed about a given origin by a given matrix
+        /// </summary>
+        /// <param name="matrix">The transformation to be applied to the <see cref="Polygon"/></param>
+        /// <param name="origin">The origin about which to apply the transformation</param>
+        /// <returns>A new <see cref="Polygon"/> instance, transformed based on the given parameters</returns>
         public readonly Polygon Transform(Matrix matrix, Vector2 origin)
         {
             Matrix transform = Matrix.CreateTranslation(-origin.X, -origin.Y, 0f) * matrix * Matrix.CreateTranslation(origin.X, origin.Y, 0f);
             return this.Transform(transform);
         }
+        /// <summary>
+        /// Creates a new <see cref="Polygon"/> instance, transformed by a given matrix
+        /// </summary>
+        /// <param name="matrix">The transformation to be applied to the <see cref="Polygon"/></param>
+        /// <returns>A new <see cref="Polygon"/> instance, transformed based on the given parameters</returns>
         public readonly Polygon Transform(Matrix matrix)
         {
             Vector2[] newPoints = new Vector2[this._points.Length];
