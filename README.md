@@ -31,7 +31,7 @@ protected override void Draw(GameTime gameTime)
   this._primitiveBatch.Begin();
   this._primitiveBatch.FillColor = Color.Black;
   //Draw a circle with center coordinates (100, 100) and a radius of 5
-  this._primitiveBatch.Circle(new Vector2(100, 100), 5f);
+  this._primitiveBatch.Circle(new Vector2(100, 100), 5);
   this._primitiveBatch.End();
   base.Draw(gameTime);
 }
