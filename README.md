@@ -15,7 +15,7 @@ MonoGeometry can be installed throught the [nuget](https://www.nuget.org/) packa
 The basis of MonoGeometry is the PrimitiveBatch class. Its usage is much the same as the SpriteBatch class provided by default.
 
 Create a private PrimitiveBatch instance, and initialize it in the LoadContent method:
-```
+```csharp
 private PrimitiveBatch _primitiveBatch;
 
 protected override void LoadContent()
@@ -25,7 +25,7 @@ protected override void LoadContent()
 }
 ```
 Primitives can now be drawn to the screen in the Draw method, with the same begin and end syntax as SpriteBatch:
-```
+```csharp
 protected override void Draw(GameTime gameTime)
 {
   this._primitiveBatch.Begin();
@@ -33,6 +33,7 @@ protected override void Draw(GameTime gameTime)
   //Draw a circle with center coordinates (100, 100) and a radius of 5
   this._primitiveBatch.Circle(new Vector2(100, 100), 5f);
   this._primitiveBatch.End();
+  base.Draw(gameTime);
 }
 ```
 
