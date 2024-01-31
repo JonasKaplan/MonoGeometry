@@ -38,4 +38,4 @@ protected override void Draw(GameTime gameTime)
 
 # Contribution
 
-All contributions are welcomed. Please use the privided .editorconfig file for style guidlines.
+All contributions are welcomed. Please use the provided .editorconfig file for style guidlines.
