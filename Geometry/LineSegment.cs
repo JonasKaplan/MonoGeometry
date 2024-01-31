@@ -104,9 +104,9 @@ namespace MonoGeometry.Geometry
         public readonly bool Contains(Vector2 point)
         {
             if (!this.BoundingBoxContains(point)) return false;
-            float lambdaX = (point.X - this.P0.X) / this.Direction.X;
-            float lambdaY = (point.Y - this.P0.Y) / this.Direction.Y;
-            return MathF.Abs(lambdaX - lambdaY) <= 0.00001f;
+            LineSegment a = new(point, this.P0);
+            LineSegment b = new(point, this.P1);
+            return LineSegment.AreParallel(a, b);
         }
         /// <summary>
         /// Checks if two <see cref="LineSegment"/> instances are parallel
@@ -114,7 +114,7 @@ namespace MonoGeometry.Geometry
         /// <param name="a">The first <see cref="LineSegment"/> instance</param>
         /// <param name="b">The second <see cref="LineSegment"/> instance</param>
         /// <returns><c>true</c> if the two <see cref="LineSegment"/>s are parallel; <c>false</c> otherwise</returns>
-        public static bool AreParallel(LineSegment a, LineSegment b) => MathF.Abs((a.Direction.X / b.Direction.X) - (a.Direction.Y / b.Direction.Y)) <= 0.00001f;
+        public static bool AreParallel(LineSegment a, LineSegment b) => MathF.Abs((a.Direction.X * b.Direction.Y) - (a.Direction.Y * b.Direction.X)) <= 0.00001f;
         /// <summary>
         /// Checks if two <see cref="LineSegment"/> instances are collinear
         /// </summary>
@@ -123,8 +123,8 @@ namespace MonoGeometry.Geometry
         /// <returns><c>true</c> if the two <see cref="LineSegment"/>s are collinear; <c>false</c> otherwise</returns>
         public static bool AreCollinear(LineSegment a, LineSegment b)
         {
-            bool b0OnLine = MathF.Abs(((b.P0.X - a.P0.X) / a.Direction.X) - ((b.P0.Y - a.P0.Y) / a.Direction.Y)) <= 0.00001f;
-            bool b1OnLine = MathF.Abs(((b.P1.X - a.P0.X) / a.Direction.X) - ((b.P1.Y - a.P0.Y) / a.Direction.Y)) <= 0.00001f;
+            bool b0OnLine = MathF.Abs(((b.P0.X - a.P0.X) * a.Direction.Y) - ((b.P0.Y - a.P0.Y) * a.Direction.X)) <= 0.00001f;
+            bool b1OnLine = MathF.Abs(((b.P1.X - a.P0.X) * a.Direction.Y) - ((b.P1.Y - a.P0.Y) * a.Direction.X)) <= 0.00001f;
             return b0OnLine && b1OnLine;
         }
         /// <summary>
@@ -145,9 +145,9 @@ namespace MonoGeometry.Geometry
             //Algorithm derived using linear algebra
             Vector2 offset = b.P0 - a.P0;
             float beta = ((a.Direction.X * offset.Y) - (a.Direction.Y * offset.X)) / ((a.Direction.Y * b.Direction.X) - (a.Direction.X * b.Direction.Y));
-            float alpha = (offset.X + (beta * b.Direction.X)) / a.Direction.X;
+            float alpha = (a.Direction.X != 0) ? ((offset.X + (beta * b.Direction.X)) / a.Direction.X) : ((offset.Y + (beta * b.Direction.Y)) / a.Direction.Y);
 
-            return ((Math.Clamp(alpha, 0.0f, 1.0f) == alpha) && (Math.Clamp(beta, 0.0f, 1.0f) == beta)) ? b.P0 + (beta * b.Direction) : null;
+            return ((Math.Clamp(alpha, 0f, 1f) == alpha) && (Math.Clamp(beta, 0f, 1f) == beta)) ? (b.P0 + (beta * b.Direction)) : null;
         }
         /// <summary>
         /// Creates a new <see cref="LineSegment"/> instance, transformed about a given origin by a given matrix
