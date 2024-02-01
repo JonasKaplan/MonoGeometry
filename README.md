@@ -12,7 +12,7 @@ MonoGeometry can be installed throught the [NuGet](https://www.nuget.org/) packa
 ```bash
 dotnet add package MonoGeometry --version 1.0.0
 ```
-The packages NuGet page is available [here](https://www.nuget.org/packages/MonoGeometry).
+This package's NuGet page is available [here](https://www.nuget.org/packages/MonoGeometry).
 # Usage
 
 The basis of MonoGeometry is the PrimitiveBatch class. Its usage is much the same as the SpriteBatch class provided by default.
