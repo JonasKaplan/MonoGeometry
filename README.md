@@ -10,7 +10,7 @@ In the future, this project will be expanded with more shape structures, and mor
 
 MonoGeometry can be installed throught the [NuGet](https://www.nuget.org/) package manager, with the following command:
 ```bash
-dotnet add package MonoGeometry --version 1.0.0
+dotnet add package MonoGeometry --version 1.0.1
 ```
 This package's NuGet page is available [here](https://www.nuget.org/packages/MonoGeometry).
 # Usage
