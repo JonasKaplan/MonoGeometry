@@ -13,6 +13,7 @@
     <Authors>ZestyGarlicPickles</Authors>
     <RepositoryUrl>https://github.com/ZestyGarlicPickles/MonoGeometry</RepositoryUrl>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
